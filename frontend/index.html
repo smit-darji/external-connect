@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>External-connect-service</title>
+</head>
+<body>
+
+<button onclick="fetch('/success',{method:'POST'}).then(load)">Success</button>
+<button onclick="fetch('/error',{method:'POST'}).then(load)">Error</button>
+<button onclick="fetch('/check-private-services').then(load)">Check Private</button>
+
+<h1>External-connect Service Logs</h1>
+
+<h3>MySQL Logs</h3>
+<table border="1" cellpadding="5" cellspacing="0">
+  <thead id="mysql-head"></thead>
+  <tbody id="mysql-body"></tbody>
+</table>
+
+<h3>Mongo Logs</h3>
+<table border="1" cellpadding="5" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Service</th>
+      <th>Endpoint</th>
+      <th>Method</th>
+      <th>Status</th>
+      <th>Message</th>
+      <th>Checked Service</th>
+      <th>URL</th>
+      <th>HTTP Status</th>
+      <th>Timestamp</th>
+    </tr>
+  </thead>
+  <tbody id="mongo-body"></tbody>
+</table>
+
+<script>
+async function load() {
+  // -----------------------
+  // MySQL (unchanged)
+  // -----------------------
+  const mysqlResp = await fetch('/mysql-logs');
+  const mysqlData = await mysqlResp.json();
+
+  const head = document.getElementById("mysql-head");
+  const body = document.getElementById("mysql-body");
+
+  head.innerHTML =
+    "<tr>" +
+    mysqlData.columns.map(c => `<th>${c}</th>`).join("") +
+    "</tr>";
+
+  body.innerHTML = mysqlData.rows.map(row =>
+    "<tr>" +
+    mysqlData.columns.map(c => `<td>${row[c]}</td>`).join("") +
+    "</tr>"
+  ).join("");
+
+  // -----------------------
+  // Mongo (TABLE FORMAT)
+  // -----------------------
+  const mongoResp = await fetch('/mongo-logs');
+  const mongoData = await mongoResp.json();
+
+  const mongoBody = document.getElementById("mongo-body");
+  mongoBody.innerHTML = mongoData.map(log => `
+    <tr>
+      <td>${log.service}</td>
+      <td>${log.endpoint}</td>
+      <td>${log.method}</td>
+      <td>${log.status}</td>
+      <td>${log.message}</td>
+      <td>${log.details?.checked_service || ""}</td>
+      <td>${log.details?.url || ""}</td>
+      <td>${log.details?.http_status || ""}</td>
+      <td>${log.timestamp?.$date || ""}</td>
+    </tr>
+  `).join("");
+}
+
+load();
+</script>
+
+
+</body>
+</html>
